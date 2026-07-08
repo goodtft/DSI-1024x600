@@ -18,22 +18,22 @@ echo "DSI uses 2lanes DSI1 interface by default"
 echo "If there are no parameters, I2C0 bus and 2 lanes DSI1 interface will be used by default"
 }
 
-#clean *.o files
-if ls *.o > /dev/null 2>&1; then
-        sudo make clean
-fi
-
-#configue config.txt
+clean_config()
+{
 sudo sed -i '/^[^#].*vc4-kms-dsi-waveshare-panel/s/^/#/' /boot/firmware/config.txt
 sudo sed -i "/vc4-kms-dsi-qdtft-panel/d" /boot/firmware/config.txt
+}
 
 dsi_ch=0
 
+#configue config.txt
 if [ $# -eq 0 ]; then
+clean_config
 sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel" >> /boot/firmware/config.txt
 dsi_ch=2
 elif [ $# -eq 1 ]; then
 if [ "$1" == "2" ] || [ "$1" == "4" ]; then
+clean_config
 sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel" >> /boot/firmware/config.txt
 if [ "$1" == "2" ]; then
 dsi_ch=2
@@ -48,6 +48,7 @@ fi
 elif [ $# -eq 2 ]; then
 if [ "$1" == "2" ] || [ "$1" == "4" ]; then
 if [ "$2" == "i2c0" ] || [ "$2" == "i2c1" ]; then
+clean_config
 sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel,$2" >> /boot/firmware/config.txt
 else
 echo "Invalid parameter"
@@ -68,6 +69,7 @@ elif [ $# -eq 3 ]; then
 if [ "$1" == "2" ] || [ "$1" == "4" ]; then
 if [ "$2" == "i2c0" ] || [ "$2" == "i2c1" ]; then
 if [ "$3" == "dsi0" ]; then
+clean_config
 sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel,$2,$3" >> /boot/firmware/config.txt
 else
 echo "Invalid parameter"
