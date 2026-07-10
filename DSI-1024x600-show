@@ -3,11 +3,11 @@
 # printf parameters information
 print_info()
 {
-echo "Usage:sudo ./DSI-1024x600-show"
-echo "Usage:sudo ./DSI-1024x600-show i2c0"
-echo "Usage:sudo ./DSI-1024x600-show i2c1"
-echo "Usage:sudo ./DSI-1024x600-show i2c1 dsi0"
-echo "Usage:sudo ./DSI-1024x600-show i2c0 dsi0"
+echo "Usage: sudo ./DSI-1024x600-show"
+echo "Usage: sudo ./DSI-1024x600-show i2c0"
+echo "Usage: sudo ./DSI-1024x600-show i2c1"
+echo "Usage: sudo ./DSI-1024x600-show i2c1 dsi0"
+echo "Usage: sudo ./DSI-1024x600-show i2c0 dsi0"
 echo "i2c0--Using I2C0 bus"
 echo "i2c1--Using I2C1 bus"
 echo "dsi0--Using DSI0 interface"
@@ -31,6 +31,11 @@ elif [ $# -eq 1 ]; then
 if [ "$1" == "i2c0" ] || [ "$1" == "i2c1" ]; then
 clean_config
 sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel,$1" >> /boot/firmware/config.txt
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+echo "sudo ./DSI-1024x600-show -h or sudo ./DSI-1024x600-show --help"
+echo "will show this help information:"
+print_info
+exit
 else
 echo -e "\033[31mThe first argument is invalid.\033[0m"
 print_info
