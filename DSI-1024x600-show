@@ -4,13 +4,10 @@
 print_info()
 {
 echo "Usage:sudo ./DSI-1024x600-show"
-echo "Usage:sudo ./DSI-1024x600-show [[2] [4]]"
-echo "Usage:sudo ./DSI-1024x600-show [[2] [4]] i2c0"
-echo "Usage:sudo ./DSI-1024x600-show [[2] [4]] i2c1"
-echo "Usage:sudo ./DSI-1024x600-show [[2] [4]] i2c1 dsi0"
-echo "Usage:sudo ./DSI-1024x600-show [[2] [4]] i2c0 dsi0"
-echo "2--Using 2 lanes"
-echo "4--Using 4 lanes"
+echo "Usage:sudo ./DSI-1024x600-show i2c0"
+echo "Usage:sudo ./DSI-1024x600-show i2c1"
+echo "Usage:sudo ./DSI-1024x600-show i2c1 dsi0"
+echo "Usage:sudo ./DSI-1024x600-show i2c0 dsi0"
 echo "i2c0--Using I2C0 bus"
 echo "i2c1--Using I2C1 bus"
 echo "dsi0--Using DSI0 interface"
@@ -20,93 +17,63 @@ echo "If there are no parameters, I2C0 bus and 2 lanes DSI1 interface will be us
 
 clean_config()
 {
-sudo sed -i '/^[^#].*vc4-kms-dsi-waveshare-panel/s/^/#/' /boot/firmware/config.txt
+sudo sed -i '/^[^#].*vc4-kms-dsi/s/^/#/' /boot/firmware/config.txt
 sudo sed -i "/vc4-kms-dsi-qdtft-panel/d" /boot/firmware/config.txt
 }
 
-dsi_ch=0
+ko_result=0
 
 #configue config.txt
 if [ $# -eq 0 ]; then
 clean_config
 sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel" >> /boot/firmware/config.txt
-dsi_ch=2
 elif [ $# -eq 1 ]; then
-if [ "$1" == "2" ] || [ "$1" == "4" ]; then
+if [ "$1" == "i2c0" ] || [ "$1" == "i2c1" ]; then
 clean_config
-sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel" >> /boot/firmware/config.txt
-if [ "$1" == "2" ]; then
-dsi_ch=2
-elif [ "$1" == "4" ]; then
-dsi_ch=4
-fi
+sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel,$1" >> /boot/firmware/config.txt
 else
-echo "Invalid parameter"
+echo -e "\033[31mThe first argument is invalid.\033[0m"
 print_info
 exit
 fi
 elif [ $# -eq 2 ]; then
-if [ "$1" == "2" ] || [ "$1" == "4" ]; then
-if [ "$2" == "i2c0" ] || [ "$2" == "i2c1" ]; then
+if [ "$1" == "i2c0" ] || [ "$1" == "i2c1" ]; then
+if [ "$2" == "dsi0" ]; then
 clean_config
-sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel,$2" >> /boot/firmware/config.txt
+sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel,$1,$2" >> /boot/firmware/config.txt
 else
-echo "Invalid parameter"
-print_info
-exit
-fi
-if [ "$1" == "2" ]; then
-dsi_ch=2
-elif [ "$1" == "4" ]; then
-dsi_ch=4
-fi
-else
-echo "Invalid parameter"
-print_info
-exit
-fi
-elif [ $# -eq 3 ]; then
-if [ "$1" == "2" ] || [ "$1" == "4" ]; then
-if [ "$2" == "i2c0" ] || [ "$2" == "i2c1" ]; then
-if [ "$3" == "dsi0" ]; then
-clean_config
-sudo echo "dtoverlay=vc4-kms-dsi-qdtft-panel,$2,$3" >> /boot/firmware/config.txt
-else
-echo "Invalid parameter"
+echo -e "\033[31mThe second argument is invalid.\033[0m"
 print_info
 exit
 fi
 else
-echo "Invalid parameter"
-print_info
-exit
-fi
-if [ "$1" == "2" ]; then
-dsi_ch=2
-elif [ "$1" == "4" ]; then
-dsi_ch=4
-fi
-else
-echo "Invalid parameter"
+echo -e "\033[31mThe first argument is invalid.\033[0m"
 print_info
 exit
 fi
 else
 print_info
-echo "Too many parameters, Up to three parameters are allowed!"
+echo -e "\033[31mToo many parameters, Up to two parameters are allowed.\033[0m"
 exit
+fi
+
+if ls /lib/modules/$(uname -r)/updates/*ko.xz > /dev/null 2>&1; then
+ko_result=1
+else
+ko_result=0
 fi
 
 #compile driver
-if [ $dsi_ch -eq 2 ]; then
-cd ./DSI-1024x600_2lanes_6.18
-elif [ $dsi_ch -eq 4 ]; then
-echo "The display module currently does not support 4 lanes DSI."
-exit
-fi
-
+cd ./DSI-1024x600_6.18
 sudo make clean
 sudo make
+if [ $? -ne 0 ]; then
+echo -e "\033[31mComple driver error!.\033[0m"
+if [ $ko_result -eq 0 ]; then
+clean_config
+fi
+exit
+fi
 sudo make install
 sudo cp -rf $PWD/../overlays/vc4-kms-dsi-qdtft-panel.dtbo /boot/firmware/overlays
 sudo reboot
