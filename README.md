@@ -3,8 +3,8 @@ Raspberry Pi DSI driver for the 1024x600 resolution module.
 # How to install the driver
 
 1.Execute any of the following commands to obtain help information:
-  ### sudo ./DSI-720x1280-show -h
-  ### sudo ./DSI-720x1280-show --help
+  ### sudo ./DSI-1024x600-show -h
+  ### sudo ./DSI-1024x600-show --help
   
 2.If there are no parameters, I2C0 bus and 2 lanes DSI1 interface will be used by default.
   ### sudo ./DSI-1024x600-show
