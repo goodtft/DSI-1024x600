@@ -8,11 +8,17 @@ echo "Usage: sudo ./DSI-1024x600-show i2c0"
 echo "Usage: sudo ./DSI-1024x600-show i2c1"
 echo "Usage: sudo ./DSI-1024x600-show i2c1 dsi0"
 echo "Usage: sudo ./DSI-1024x600-show i2c0 dsi0"
+echo "Usage: sudo ./DSI-1024x600-show -h or --help"
+echo "Usage: sudo ./DSI-1024x600-show clean"
+echo "Usage: sudo ./DSI-1024x600-show uninstall"
 echo "i2c0--Using I2C0 bus"
 echo "i2c1--Using I2C1 bus"
 echo "dsi0--Using DSI0 interface"
 echo "DSI uses 2lanes DSI1 interface by default"
 echo "If there are no parameters, I2C0 bus and 2 lanes DSI1 interface will be used by default"
+echo "-h or --Help to show this help information"
+echo "clean--Clean up the compile driver"
+echo "uninstall--Uninstall the currently installed driver"
 }
 
 clean_config()
@@ -21,6 +27,21 @@ sudo sed -i '/^[^#].*vc4-kms-dsi/s/^/#/' /boot/firmware/config.txt
 sudo sed -i "/vc4-kms-dsi-qdtft-panel/d" /boot/firmware/config.txt
 }
 
+uninstall_driver()
+{
+sudo sed -i "/vc4-kms-dsi-qdtft-panel/d" /boot/firmware/config.txt
+if [ -f /lib/modules/$(uname -r)/updates/panel-qdtft-dsi.ko.xz ]; then
+sudo rm -rf /lib/modules/$(uname -r)/updates/panel-qdtft-dsi.ko.xz
+fi
+if [ -f /boot/firmware/overlays/vc4-kms-dsi-qdtft-panel.dtbo ]; then
+sudo rm -rf /boot/firmware/overlays/vc4-kms-dsi-qdtft-panel.dtbo
+fi
+if [ -f /home/$username/.current_installed ]; then
+sudo rm -rf /home/$username/.current_installed
+fi
+}
+
+username=`logname | tr -d '\n'`
 ko_result=0
 
 #configue config.txt
@@ -35,6 +56,13 @@ elif [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
 echo "sudo ./DSI-1024x600-show -h or sudo ./DSI-1024x600-show --help"
 echo "will show this help information:"
 print_info
+exit
+elif [ "$1" == "clean" ]; then
+cd ./DSI-1024x600_6.18
+sudo make clean
+exit
+elif [ "$1" == "uninstall" ]; then
+uninstall_driver
 exit
 else
 echo -e "\033[31mThe first argument is invalid.\033[0m"
@@ -81,4 +109,6 @@ exit
 fi
 sudo make install
 sudo cp -rf $PWD/../overlays/vc4-kms-dsi-qdtft-panel.dtbo /boot/firmware/overlays
+sudo touch /home/$username/.current_installed
+sudo echo "1024x600" > /home/$username/.current_installed
 sudo reboot
